@@ -1,0 +1,14 @@
+[Unit]
+Description=Tizen launcher
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/home/developer/launcher
+PIDFile=/tmp/launcher-service.pid
+TimeoutStopSec=0
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+Alias=launcher.service
