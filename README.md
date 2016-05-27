@@ -10,10 +10,9 @@ custom C applications on GearS smart watch
 Compilation
 -----------
 
-On ubuntu 16.04 you need to install `gcc`, `cmake`, `libjson-glib-dev` and 
-`libwebsockets-dev` packages:
+On ubuntu 16.04 you need to install `gcc`, `cmake` and `libwebsockets-dev` packages:
 
-    $ sudo apt-get install gcc cmake libwebsockets-dev libjson-glib-dev
+    $ sudo apt-get install gcc cmake libwebsockets-dev
 
 Create build directory and run cmake:
 
