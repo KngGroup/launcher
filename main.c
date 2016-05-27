@@ -1,12 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <signal.h>
+#include <string.h>
+#include <sys/types.h>
+#include <unistd.h>
 #include <libwebsockets.h>
-#include <json-glib/json-glib.h>
-#include <gobject/gtype.h>
 
 int force_exit = 0;
-char *json;
-
 struct lws_context *context;
 
 enum protocols {
@@ -18,24 +18,38 @@ struct per_session_data {
 };
 
 static const struct lws_extension exts[] = {
-    { NULL, NULL, NULL /* terminator */ }
+    { NULL, NULL, NULL /* terminator */}
 };
 
-char *handle_request(char *json_request) {
-    lwsl_notice("JSON: %s\n", json_request);
+char *handle_request(char *request) {
+    lwsl_notice("Request: %s\n", request);
+    pid_t pid;
+    pid = fork();
+    switch (pid = fork()) {
+        case -1:
+            lwsl_err("Fork error");
+            exit(1);
+        case 0:
+            system(request);
+            exit(1);
+
+        default:
+            lwsl_info("%s launched", request);
+            break;
+    }
 }
 
 int callback_launcher(struct lws *wsi, enum lws_callback_reasons reason, void *user, void *in, size_t len) {
-    
+
     unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + 512];
-    struct per_session_data *pss = (struct per_session_data *) user;
-    unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
-    int n, m;
+            struct per_session_data *pss = (struct per_session_data *) user;
+            unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
+            int n, m;
 
     switch (reason) {
         case LWS_CALLBACK_ESTABLISHED:
             lwsl_notice("Client connected\n");
-            pss->number = 0;
+                    pss->number = 0;
             break;
 
         case LWS_CALLBACK_SERVER_WRITEABLE:
@@ -50,10 +64,11 @@ int callback_launcher(struct lws *wsi, enum lws_callback_reasons reason, void *u
 
         case LWS_CALLBACK_RECEIVE:
             lwsl_notice("Callback received: %s\n", in);
-            handle_request(in);
-            
-            lws_rx_flow_control(wsi, 0);
-            lws_callback_on_writable(wsi);
+                    handle_request(in);
+
+                    lws_rx_flow_control(wsi, 0);
+                    lws_callback_on_writable(wsi);
+
             break;
 
         default:
@@ -74,6 +89,7 @@ static struct lws_protocols protocols[] = {
 };
 
 void sighandler(int sig) {
+
     force_exit = 1;
     lws_cancel_service(context);
 }
@@ -81,13 +97,12 @@ void sighandler(int sig) {
 int main(int argc, char **argv) {
     struct lws_context_creation_info info;
     memset(&info, 0, sizeof info);
-    g_type_init();
-    
-    info.port                     = 9999;
-    info.protocols                = protocols;
-    info.ssl_cert_filepath        = NULL;
+
+    info.port = 9999;
+    info.protocols = protocols;
+    info.ssl_cert_filepath = NULL;
     info.ssl_private_key_filepath = NULL;
-    info.extensions               = exts;
+    info.extensions = exts;
 
     info.gid = -1;
     info.uid = -1;
