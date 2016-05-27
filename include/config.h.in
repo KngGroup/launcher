@@ -1,0 +1,5 @@
+#define VERSION_MAJOR @Launcher_VERSION_MAJOR@
+#define VERSION_MINOR @Launcher_VERSION_MINOR@
+#define VERSION_PATCH @Launcher_VERSION_PATCH@
+
+#define PACKAGE "@Launcher_PACKAGE@"
